@@ -1,7 +1,20 @@
-import { supabase } from './supabase'
-import type { Database } from './supabase'
-
-export type Item = Database['public']['Tables']['items']['Row'] & {
+export interface Item {
+  id: string
+  user_id: string
+  title: string
+  description: string
+  category_id: string
+  type: string
+  size: string
+  condition: string
+  tags: string[]
+  images: string[]
+  points_value: number
+  status: "pending" | "approved" | "rejected"
+  is_available: boolean
+  featured: boolean
+  created_at: string
+  updated_at: string
   user?: {
     full_name: string
     avatar_url?: string
@@ -11,7 +24,19 @@ export type Item = Database['public']['Tables']['items']['Row'] & {
   }
 }
 
-export type SwapRequest = Database['public']['Tables']['swap_requests']['Row'] & {
+export interface SwapRequest {
+  id: string
+  requester_id: string
+  owner_id: string
+  requested_item_id: string
+  offered_item_id: string
+  status: "pending" | "accepted" | "rejected" | "completed" | "shipped"
+  message?: string
+  shipping_method?: "pickup" | "courier"
+  shipping_address?: string
+  tracking_number?: string
+  created_at: string
+  updated_at: string
   requester?: {
     id: string
     full_name: string
@@ -28,396 +53,217 @@ export type SwapRequest = Database['public']['Tables']['swap_requests']['Row'] &
   offered_item?: Item
 }
 
-export type Notification = Database['public']['Tables']['notifications']['Row']
-
-export type Category = Database['public']['Tables']['categories']['Row']
-
-export type User = Database['public']['Tables']['users']['Row']
-
-export type Message = Database['public']['Tables']['messages']['Row']
-
-export type UserReview = Database['public']['Tables']['user_reviews']['Row']
-
-// Database functions
-export async function getItems(filters?: {
-  category?: string
-  search?: string
-  status?: string
-  featured?: boolean
-  limit?: number
-  offset?: number
-}): Promise<Item[]> {
-  let query = supabase
-    .from('items')
-    .select(`
-      *,
-      user:users(full_name, avatar_url),
-      category:categories(name)
-    `)
-    .eq('status', 'approved')
-    .eq('is_available', true)
-
-  if (filters?.category) {
-    query = query.eq('category_id', filters.category)
-  }
-
-  if (filters?.search) {
-    query = query.textSearch('title', filters.search)
-  }
-
-  if (filters?.featured) {
-    query = query.eq('featured', true)
-  }
-
-  if (filters?.limit) {
-    query = query.limit(filters.limit)
-  }
-
-  if (filters?.offset) {
-    query = query.range(filters.offset, filters.offset + (filters.limit || 10) - 1)
-  }
-
-  const { data, error } = await query.order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error fetching items:', error)
-    return []
-  }
-
-  return data || []
-}
-
-export async function getItem(id: string): Promise<Item | null> {
-  const { data, error } = await supabase
-    .from('items')
-    .select(`
-      *,
-      user:users(full_name, avatar_url),
-      category:categories(name)
-    `)
-    .eq('id', id)
-    .single()
-
-  if (error) {
-    console.error('Error fetching item:', error)
-    return null
-  }
-
-  return data
-}
-
-export async function getCategories(): Promise<Category[]> {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name')
-
-  if (error) {
-    console.error('Error fetching categories:', error)
-    return []
-  }
-
-  return data || []
-}
-
-export async function getSwapRequests(userId: string): Promise<SwapRequest[]> {
-  const { data, error } = await supabase
-    .from('swap_requests')
-    .select(`
-      *,
-      requester:users!swap_requests_requester_id_fkey(full_name, avatar_url, email),
-      owner:users!swap_requests_owner_id_fkey(full_name, avatar_url, email),
-      requested_item:items!swap_requests_requested_item_id_fkey(*),
-      offered_item:items!swap_requests_offered_item_id_fkey(*)
-    `)
-    .or(`requester_id.eq.${userId},owner_id.eq.${userId}`)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error fetching swap requests:', error)
-    return []
-  }
-
-  return data || []
-}
-
-export async function getNotifications(userId: string): Promise<Notification[]> {
-  const { data, error } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error fetching notifications:', error)
-    return []
-  }
-
-  return data || []
-}
-
-export async function createSwapRequest(swapData: {
-  requester_id: string
-  owner_id: string
-  requested_item_id: string
-  offered_item_id?: string
-  swap_type: 'direct' | 'points' | 'mixed'
-  points_offered?: number
-  message?: string
-}): Promise<SwapRequest | null> {
-  const { data, error } = await supabase
-    .from('swap_requests')
-    .insert(swapData)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error creating swap request:', error)
-    return null
-  }
-
-  return data
-}
-
-export async function updateSwapRequest(
-  id: string,
-  updates: Partial<Database['public']['Tables']['swap_requests']['Update']>
-): Promise<SwapRequest | null> {
-  const { data, error } = await supabase
-    .from('swap_requests')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error updating swap request:', error)
-    return null
-  }
-
-  return data
-}
-
-export async function createNotification(notificationData: {
+export interface Notification {
+  id: string
   user_id: string
-  type: string
+  type: "swap_request" | "swap_accepted" | "swap_rejected" | "swap_shipped" | "swap_completed"
   title: string
   message: string
+  read: boolean
   related_id?: string
-}): Promise<Notification | null> {
-  const { data, error } = await supabase
-    .from('notifications')
-    .insert(notificationData)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error creating notification:', error)
-    return null
-  }
-
-  return data
+  created_at: string
 }
 
-export async function markNotificationAsRead(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('notifications')
-    .update({ read: true })
-    .eq('id', id)
-
-  if (error) {
-    console.error('Error marking notification as read:', error)
-  }
+export interface Category {
+  id: string
+  name: string
+  slug: string
 }
 
-export async function getUser(userId: string): Promise<User | null> {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', userId)
-    .single()
+// Mock database functions (in a real app, these would connect to Supabase)
+export const mockUsers: any[] = [
+  {
+    id: "1",
+    email: "admin@rewear.com",
+    full_name: "Admin User",
+    points: 1000,
+    role: "admin",
+    avatar_url: "/placeholder.svg?height=40&width=40",
+  },
+  {
+    id: "2",
+    email: "user@example.com",
+    full_name: "Jane Doe",
+    points: 150,
+    role: "user",
+    avatar_url: "/placeholder.svg?height=40&width=40",
+  },
+  {
+    id: "3",
+    email: "john@example.com",
+    full_name: "John Smith",
+    points: 200,
+    role: "user",
+    avatar_url: "/placeholder.svg?height=40&width=40",
+  },
+]
 
-  if (error) {
-    console.error('Error fetching user:', error)
-    return null
-  }
+export const mockCategories: Category[] = [
+  { id: "1", name: "Tops", slug: "tops" },
+  { id: "2", name: "Bottoms", slug: "bottoms" },
+  { id: "3", name: "Dresses", slug: "dresses" },
+  { id: "4", name: "Outerwear", slug: "outerwear" },
+  { id: "5", name: "Shoes", slug: "shoes" },
+  { id: "6", name: "Accessories", slug: "accessories" },
+]
 
-  return data
-}
+export const mockItems: Item[] = [
+  {
+    id: "1",
+    user_id: "1",
+    title: "Vintage Denim Jacket",
+    description:
+      "Classic blue denim jacket in excellent condition. Perfect for layering and adding a vintage touch to any outfit.",
+    category_id: "4",
+    type: "Jacket",
+    size: "M",
+    condition: "Excellent",
+    tags: ["vintage", "denim", "casual"],
+    images: ["/denim-jacket.jpg"],
+    points_value: 75,
+    status: "approved",
+    is_available: true,
+    featured: true,
+    created_at: "2024-01-15T10:00:00Z",
+    updated_at: "2024-01-15T10:00:00Z",
+    user: { full_name: "Admin User", avatar_url: "/placeholder.svg?height=40&width=40" },
+    category: { name: "Outerwear" },
+  },
+  {
+    id: "2",
+    user_id: "2",
+    title: "Floral Summer Dress",
+    description: "Beautiful floral print dress, perfect for summer occasions. Lightweight and comfortable.",
+    category_id: "3",
+    type: "Dress",
+    size: "S",
+    condition: "Good",
+    tags: ["floral", "summer", "casual"],
+    images: ["/floral-dress.jpg"],
+    points_value: 60,
+    status: "approved",
+    is_available: true,
+    featured: true,
+    created_at: "2024-01-14T15:30:00Z",
+    updated_at: "2024-01-14T15:30:00Z",
+    user: { full_name: "Jane Doe", avatar_url: "/placeholder.svg?height=40&width=40" },
+    category: { name: "Dresses" },
+  },
+  {
+    id: "3",
+    user_id: "2",
+    title: "Designer Handbag",
+    description: "Authentic designer handbag in mint condition. Rarely used.",
+    category_id: "6",
+    type: "Bag",
+    size: "One Size",
+    condition: "Excellent",
+    tags: ["designer", "luxury", "handbag"],
+    images: ["/designer-handbag.jpg"],
+    points_value: 120,
+    status: "approved",
+    is_available: true,
+    featured: false,
+    created_at: "2024-01-13T09:15:00Z",
+    updated_at: "2024-01-13T09:15:00Z",
+    user: { full_name: "Jane Doe", avatar_url: "/placeholder.svg?height=40&width=40" },
+    category: { name: "Accessories" },
+  },
+  {
+    id: "4",
+    user_id: "3",
+    title: "Casual T-Shirt",
+    description: "Comfortable cotton t-shirt in great condition.",
+    category_id: "1",
+    type: "T-Shirt",
+    size: "L",
+    condition: "Good",
+    tags: ["casual", "cotton", "comfortable"],
+    images: ["/casual-tshirt.jpg"],
+    points_value: 30,
+    status: "approved",
+    is_available: true,
+    featured: false,
+    created_at: "2024-01-12T14:20:00Z",
+    updated_at: "2024-01-12T14:20:00Z",
+    user: { full_name: "John Smith", avatar_url: "/placeholder.svg?height=40&width=40" },
+    category: { name: "Tops" },
+  },
+]
 
-export async function updateUser(
-  userId: string,
-  updates: Partial<Database['public']['Tables']['users']['Update']>
-): Promise<User | null> {
-  const { data, error } = await supabase
-    .from('users')
-    .update(updates)
-    .eq('id', userId)
-    .select()
-    .single()
+export const mockSwapRequests: SwapRequest[] = [
+  {
+    id: "1",
+    requester_id: "2",
+    owner_id: "1",
+    requested_item_id: "1",
+    offered_item_id: "2",
+    status: "pending",
+    message: "Hi! I'd love to swap my floral dress for your vintage denim jacket. It would be perfect for my style!",
+    created_at: "2024-01-16T10:30:00Z",
+    updated_at: "2024-01-16T10:30:00Z",
+    requester: {
+      id: "2",
+      full_name: "Jane Doe",
+      avatar_url: "/placeholder.svg?height=40&width=40",
+      email: "user@example.com",
+    },
+    owner: {
+      id: "1",
+      full_name: "Admin User",
+      avatar_url: "/placeholder.svg?height=40&width=40",
+      email: "admin@rewear.com",
+    },
+    requested_item: mockItems[0],
+    offered_item: mockItems[1],
+  },
+  {
+    id: "2",
+    requester_id: "3",
+    owner_id: "2",
+    requested_item_id: "3",
+    offered_item_id: "4",
+    status: "accepted",
+    message: "Would you be interested in swapping your designer handbag for my t-shirt?",
+    shipping_method: "courier",
+    created_at: "2024-01-15T14:20:00Z",
+    updated_at: "2024-01-16T09:15:00Z",
+    requester: {
+      id: "3",
+      full_name: "John Smith",
+      avatar_url: "/placeholder.svg?height=40&width=40",
+      email: "john@example.com",
+    },
+    owner: {
+      id: "2",
+      full_name: "Jane Doe",
+      avatar_url: "/placeholder.svg?height=40&width=40",
+      email: "user@example.com",
+    },
+    requested_item: mockItems[2],
+    offered_item: mockItems[3],
+  },
+]
 
-  if (error) {
-    console.error('Error updating user:', error)
-    return null
-  }
-
-  return data
-}
-
-export async function createItem(itemData: {
-  user_id: string
-  title: string
-  description: string
-  category_id: string
-  type: string
-  size: string
-  condition: string
-  tags?: string[]
-  images?: string[]
-  points_value?: number
-}): Promise<Item | null> {
-  const { data, error } = await supabase
-    .from('items')
-    .insert(itemData)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error creating item:', error)
-    return null
-  }
-
-  return data
-}
-
-export async function updateItem(
-  itemId: string,
-  updates: Partial<Database['public']['Tables']['items']['Update']>
-): Promise<Item | null> {
-  const { data, error } = await supabase
-    .from('items')
-    .update(updates)
-    .eq('id', itemId)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error updating item:', error)
-    return null
-  }
-
-  return data
-}
-
-export async function getMessages(swapRequestId: string): Promise<Message[]> {
-  const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('swap_request_id', swapRequestId)
-    .order('created_at', { ascending: true })
-
-  if (error) {
-    console.error('Error fetching messages:', error)
-    return []
-  }
-
-  return data || []
-}
-
-export async function sendMessage(messageData: {
-  sender_id: string
-  receiver_id: string
-  swap_request_id: string
-  content: string
-}): Promise<Message | null> {
-  const { data, error } = await supabase
-    .from('messages')
-    .insert(messageData)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error sending message:', error)
-    return null
-  }
-
-  return data
-}
-
-export async function addToFavorites(userId: string, itemId: string): Promise<void> {
-  const { error } = await supabase
-    .from('user_favorites')
-    .insert({ user_id: userId, item_id: itemId })
-
-  if (error) {
-    console.error('Error adding to favorites:', error)
-  }
-}
-
-export async function removeFromFavorites(userId: string, itemId: string): Promise<void> {
-  const { error } = await supabase
-    .from('user_favorites')
-    .delete()
-    .eq('user_id', userId)
-    .eq('item_id', itemId)
-
-  if (error) {
-    console.error('Error removing from favorites:', error)
-  }
-}
-
-export async function getFavorites(userId: string): Promise<Item[]> {
-  const { data, error } = await supabase
-    .from('user_favorites')
-    .select(`
-      item:items(
-        *,
-        user:users(full_name, avatar_url),
-        category:categories(name)
-      )
-    `)
-    .eq('user_id', userId)
-
-  if (error) {
-    console.error('Error fetching favorites:', error)
-    return []
-  }
-
-  return data?.map(fav => fav.item) || []
-}
-
-export async function createReview(reviewData: {
-  reviewer_id: string
-  reviewed_user_id: string
-  swap_request_id: string
-  rating: number
-  comment?: string
-}): Promise<UserReview | null> {
-  const { data, error } = await supabase
-    .from('user_reviews')
-    .insert(reviewData)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error creating review:', error)
-    return null
-  }
-
-  return data
-}
-
-export async function getUserReviews(userId: string): Promise<UserReview[]> {
-  const { data, error } = await supabase
-    .from('user_reviews')
-    .select('*')
-    .eq('reviewed_user_id', userId)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error fetching user reviews:', error)
-    return []
-  }
-
-  return data || []
-}
+export const mockNotifications: Notification[] = [
+  {
+    id: "1",
+    user_id: "1",
+    type: "swap_request",
+    title: "New Swap Request",
+    message: "Jane Doe wants to swap for your Vintage Denim Jacket",
+    read: false,
+    related_id: "1",
+    created_at: "2024-01-16T10:30:00Z",
+  },
+  {
+    id: "2",
+    user_id: "3",
+    type: "swap_accepted",
+    title: "Swap Request Accepted",
+    message: "Jane Doe accepted your swap request for Designer Handbag",
+    read: false,
+    related_id: "2",
+    created_at: "2024-01-16T09:15:00Z",
+  },
+]

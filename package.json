@@ -6,10 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start",
-    "db:generate": "supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/database.types.ts",
-    "db:push": "supabase db push",
-    "db:reset": "supabase db reset"
+    "start": "next start"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -40,7 +37,6 @@
     "@radix-ui/react-toggle": "1.1.1",
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
-    "@supabase/supabase-js": "^2.39.0",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -65,7 +61,6 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@supabase/cli": "^1.145.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
