@@ -1,52 +1,49 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { mockSwapRequests, mockNotifications } from "@/lib/database"
+import { NextRequest, NextResponse } from "next/server"
+import { createSwapRequest, createNotification } from "@/lib/database"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { fromUser, toUser, requestedItem, offeredItem, message } = body
+    const { requester_id, owner_id, requested_item_id, offered_item_id, message } = body
 
     // Validate required fields
-    if (!fromUser || !toUser || !requestedItem || !offeredItem) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    if (!requester_id || !owner_id || !requested_item_id || !offered_item_id) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      )
     }
 
-    // Mock swap request creation
-    const swapRequest = {
-      id: Date.now().toString(),
-      requester_id: fromUser,
-      owner_id: toUser,
-      requested_item_id: requestedItem,
-      offered_item_id: offeredItem,
+    // Create swap request
+    const swapRequest = await createSwapRequest({
+      requester_id,
+      owner_id,
+      requested_item_id,
+      offered_item_id,
       status: "pending",
-      message: message || "",
+      message,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-
-    // Add to mock database
-    mockSwapRequests.push(swapRequest as any)
+      updated_at: new Date().toISOString()
+    })
 
     // Create notification for the owner
-    const notification = {
-      id: (Date.now() + 1).toString(),
-      user_id: toUser,
-      type: "swap_request" as const,
+    await createNotification({
+      user_id: owner_id,
       title: "New Swap Request",
-      message: "Someone wants to swap for your item",
-      read: false,
-      related_id: swapRequest.id,
-      created_at: new Date().toISOString(),
-    }
-
-    mockNotifications.push(notification)
+      message: `You have received a new swap request for your item`,
+      type: "swap_request",
+      is_read: false
+    })
 
     return NextResponse.json({
       success: true,
-      swapRequest,
-      message: "Swap request sent successfully",
+      swapRequest
     })
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error creating swap request:", error)
+    return NextResponse.json(
+      { error: "Failed to create swap request" },
+      { status: 500 }
+    )
   }
 }

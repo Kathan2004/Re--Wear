@@ -1,16 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ItemCard } from "@/components/item-card"
-import { mockItems } from "@/lib/database"
+import { getItems, type Item } from "@/lib/database"
 import { Recycle, Users, Leaf, ArrowRight, Heart, Coins } from "lucide-react"
 
 export default function HomePage() {
-  const [featuredItems, setFeaturedItems] = useState(mockItems.filter((item) => item.featured))
+  const [featuredItems, setFeaturedItems] = useState<Item[]>([])
+
+  useEffect(() => {
+    const loadFeaturedItems = async () => {
+      const items = await getItems({ featured: true, limit: 6 })
+      setFeaturedItems(items)
+    }
+    loadFeaturedItems()
+  }, [])
 
   const stats = [
     { label: "Items Exchanged", value: "12,543", icon: Recycle },

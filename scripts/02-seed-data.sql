@@ -5,7 +5,6 @@
 INSERT INTO users (email, full_name, points, bio, location, avatar_url) VALUES
 ('kathan@example.com', 'Kathan Somani', 250, 'Sustainable fashion advocate and vintage lover', 'Surat, India', '/placeholder-user.jpg'),
 ('priyansh@example.com', 'Priyansh Rokade', 180, 'Minimalist lifestyle enthusiast', 'Mumbai, India', '/placeholder-user.jpg'),
-('prabhakar@example.com', 'Prabhakar Mishra', 320, 'Fashion blogger and style consultant', 'Mumbai, India', '/placeholder-user.jpg'),
 ('rohan@example.com', 'Rohan Sharma', 95, 'Streetwear collector and sneakerhead', 'Mumbai, India', '/placeholder-user.jpg'),
 ('aarav@example.com', 'Aarav Patel', 400, 'Luxury fashion reseller and vintage curator', 'Surat, India', '/placeholder-user.jpg'),
 ('aarav@example.com', 'Aarav Patel', 150, 'Eco-conscious fashion designer', 'Surat, India', '/placeholder-user.jpg');
@@ -345,7 +344,7 @@ INSERT INTO user_reviews (reviewer_id, reviewed_user_id, swap_request_id, rating
  5,
  'Amazing experience! Alex''s sustainable dress is even more beautiful in person. Fast shipping and great communication.');
 
---Update some items to have more realistic view counts
+-- Update some items to have more realistic view counts
 UPDATE items SET views_count = FLOOR(RANDOM() * 100) + 10 WHERE status = 'approved';
 
 -- Update some notifications to be read

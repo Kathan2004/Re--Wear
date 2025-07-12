@@ -1,52 +1,109 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { mockItems, mockCategories } from "@/lib/database"
+import { NextRequest, NextResponse } from "next/server"
+import { getItems, getCategories, createItem } from "@/lib/database"
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
+  try {
+    const { searchParams } = new URL(request.url)
+    const category = searchParams.get("category")
+    const search = searchParams.get("search")
+    const size = searchParams.get("size")
+    const condition = searchParams.get("condition")
+    const featured = searchParams.get("featured")
+    const limit = searchParams.get("limit")
 
-  // Get filter parameters
-  const category = searchParams.get("category")
-  const size = searchParams.get("size")
-  const condition = searchParams.get("condition")
-  const brand = searchParams.get("brand")
-  const search = searchParams.get("search")
-  const page = Number.parseInt(searchParams.get("page") || "1")
-  const limit = Number.parseInt(searchParams.get("limit") || "12")
+    // Get all items and categories
+    const [items, categories] = await Promise.all([
+      getItems(),
+      getCategories()
+    ])
 
-  let filteredItems = mockItems.filter((item) => item.status === "approved" && item.is_available)
+    // Filter items based on query parameters
+    let filteredItems = items.filter((item) => item.status === "approved" && item.is_available)
 
-  // Apply filters
-  if (category && category !== "all") {
-    filteredItems = filteredItems.filter((item) => item.category_id === category)
-  }
+    if (category && category !== "all") {
+      filteredItems = filteredItems.filter((item) => item.category_id === category)
+    }
 
-  if (size && size !== "all") {
-    filteredItems = filteredItems.filter((item) => item.size === size)
-  }
+    if (search) {
+      const searchLower = search.toLowerCase()
+      filteredItems = filteredItems.filter(
+        (item) =>
+          item.title.toLowerCase().includes(searchLower) ||
+          item.description.toLowerCase().includes(searchLower) ||
+          item.tags.some((tag) => tag.toLowerCase().includes(searchLower))
+      )
+    }
 
-  if (condition && condition !== "all") {
-    filteredItems = filteredItems.filter((item) => item.condition === condition)
-  }
+    if (size && size !== "all") {
+      filteredItems = filteredItems.filter((item) => item.size === size)
+    }
 
-  if (search) {
-    filteredItems = filteredItems.filter(
-      (item) =>
-        item.title.toLowerCase().includes(search.toLowerCase()) ||
-        item.description.toLowerCase().includes(search.toLowerCase()) ||
-        item.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase())),
+    if (condition && condition !== "all") {
+      filteredItems = filteredItems.filter((item) => item.condition === condition)
+    }
+
+    if (featured === "true") {
+      filteredItems = filteredItems.filter((item) => item.featured)
+    }
+
+    // Apply limit if specified
+    if (limit) {
+      const limitNum = parseInt(limit)
+      filteredItems = filteredItems.slice(0, limitNum)
+    }
+
+    return NextResponse.json({
+      items: filteredItems,
+      categories: categories,
+      total: filteredItems.length,
+    })
+  } catch (error) {
+    console.error("Error fetching items:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch items" },
+      { status: 500 }
     )
   }
+}
 
-  // Pagination
-  const startIndex = (page - 1) * limit
-  const endIndex = startIndex + limit
-  const paginatedItems = filteredItems.slice(startIndex, endIndex)
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    // Validate required fields
+    const requiredFields = ['title', 'category_id', 'user_id', 'size', 'condition']
+    for (const field of requiredFields) {
+      if (!body[field]) {
+        return NextResponse.json(
+          { error: `Missing required field: ${field}` },
+          { status: 400 }
+        )
+      }
+    }
 
-  return NextResponse.json({
-    items: paginatedItems,
-    total: filteredItems.length,
-    page,
-    totalPages: Math.ceil(filteredItems.length / limit),
-    categories: mockCategories,
-  })
+    // Create the item
+    const newItem = await createItem({
+      title: body.title,
+      description: body.description || "",
+      image_url: body.image_url || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=400&fit=crop",
+      category_id: body.category_id,
+      user_id: body.user_id,
+      size: body.size,
+      condition: body.condition,
+      brand: body.brand || "Other",
+      points_required: body.points_required || 50,
+      tags: body.tags || [],
+      status: body.status || "pending",
+      is_available: body.is_available !== undefined ? body.is_available : true,
+      featured: body.featured || false
+    })
+
+    return NextResponse.json(newItem, { status: 201 })
+  } catch (error) {
+    console.error("Error creating item:", error)
+    return NextResponse.json(
+      { error: "Failed to create item" },
+      { status: 500 }
+    )
+  }
 }

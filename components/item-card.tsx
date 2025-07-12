@@ -15,7 +15,7 @@ export function ItemCard({ item }: ItemCardProps) {
     <Link href={`/items/${item.id}`}>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
         <div className="aspect-square relative">
-          <Image src={item.images[0] || "/placeholder.svg"} alt={item.title} fill className="object-cover" />
+          <Image src={item.image_url || "/placeholder.svg"} alt={item.title} fill className="object-cover" />
           {item.featured && (
             <Badge className="absolute top-2 left-2 bg-yellow-500 hover:bg-yellow-600">
               <Star className="h-3 w-3 mr-1" />
@@ -24,7 +24,7 @@ export function ItemCard({ item }: ItemCardProps) {
           )}
           <Badge className="absolute top-2 right-2 bg-green-600 hover:bg-green-700">
             <Coins className="h-3 w-3 mr-1" />
-            {item.points_value}
+            {item.points_required}
           </Badge>
         </div>
 

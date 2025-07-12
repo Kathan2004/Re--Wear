@@ -1,42 +1,42 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { mockSwapRequests, mockNotifications } from "@/lib/database"
+import { NextRequest, NextResponse } from "next/server"
+import { updateSwapRequest, createNotification } from "@/lib/database"
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const body = await request.json()
-    const { message } = body
-
-    // Find and update the swap request
-    const requestIndex = mockSwapRequests.findIndex((req) => req.id === params.id)
-    if (requestIndex === -1) {
-      return NextResponse.json({ error: "Swap request not found" }, { status: 404 })
-    }
-
-    mockSwapRequests[requestIndex] = {
-      ...mockSwapRequests[requestIndex],
+    // Update swap request status to rejected
+    const updatedRequest = await updateSwapRequest(params.id, {
       status: "rejected",
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+
+    if (!updatedRequest) {
+      return NextResponse.json(
+        { error: "Swap request not found" },
+        { status: 404 }
+      )
     }
 
     // Create notification for the requester
-    const notification = {
-      id: Date.now().toString(),
-      user_id: mockSwapRequests[requestIndex].requester_id,
-      type: "swap_rejected" as const,
+    await createNotification({
+      user_id: updatedRequest.requester_id,
       title: "Swap Request Rejected",
-      message: "Your swap request was not accepted",
-      read: false,
-      related_id: params.id,
-      created_at: new Date().toISOString(),
-    }
-
-    mockNotifications.push(notification)
+      message: "Your swap request has been rejected by the owner",
+      type: "swap_rejected",
+      is_read: false
+    })
 
     return NextResponse.json({
       success: true,
-      message: "Swap request rejected",
+      swapRequest: updatedRequest
     })
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error rejecting swap request:", error)
+    return NextResponse.json(
+      { error: "Failed to reject swap request" },
+      { status: 500 }
+    )
   }
 }

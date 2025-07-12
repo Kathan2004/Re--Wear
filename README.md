@@ -1,247 +1,271 @@
-# ReWear - Community Clothing Exchange
+# ReWear - Community Clothing Exchange Platform
 
-A sustainable fashion platform that enables users to swap clothing items and redeem points for new pieces, promoting circular fashion and reducing textile waste.
+A modern, sustainable clothing exchange platform built with Next.js 14, TypeScript, and Tailwind CSS. ReWear enables users to swap clothing items with other community members, promoting sustainable fashion and reducing textile waste.
 
-## Features
+## 🌟 Features
 
-- **Clothing Swaps**: Direct item-to-item exchanges between users
-- **Points System**: Earn and spend points for clothing items
-- **User Profiles**: Personalized profiles with bio, location, and avatar
-- **Categories**: Organized clothing categories (tops, bottoms, dresses, etc.)
-- **Search & Filter**: Find items by category, condition, size, and tags
-- **Messaging**: In-app messaging for swap negotiations
-- **Notifications**: Real-time notifications for swap requests and updates
-- **Reviews**: User rating and review system
-- **Favorites**: Save items to wishlist
-- **Admin Panel**: Content moderation and user management
+### Core Functionality
+- **User Authentication**: Secure login/signup system with localStorage persistence
+- **Item Management**: Add, edit, and manage your clothing items
+- **Browse & Search**: Discover items from other users with advanced filtering
+- **Swap Requests**: Send and manage clothing swap requests
+- **Real-time Notifications**: Stay updated on swap requests and messages
+- **User Profiles**: View user profiles and their item collections
+- **Favorites System**: Save items you're interested in
+- **Review System**: Rate and review completed swaps
 
-## Tech Stack
+### Technical Features
+- **Responsive Design**: Mobile-first design that works on all devices
+- **Dark/Light Mode**: Toggle between themes
+- **Local Storage**: No external database required - data persists in browser
+- **TypeScript**: Full type safety throughout the application
+- **Modern UI**: Built with shadcn/ui components and Tailwind CSS
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS, Radix UI components
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **File Storage**: Supabase Storage (for images)
-- **Deployment**: Vercel (recommended)
-
-## Database Schema
-
-### Core Tables
-
-1. **users** - User profiles and authentication
-2. **categories** - Clothing categories (tops, bottoms, dresses, etc.)
-3. **items** - Clothing items available for swap
-4. **swap_requests** - Swap transactions between users
-5. **notifications** - User notifications
-6. **messages** - In-app messaging
-7. **user_favorites** - User wishlists
-8. **user_reviews** - User rating system
-9. **user_points_history** - Points transaction tracking
-
-### Key Features
-
-- **Row Level Security (RLS)** - Secure data access
-- **Full-text Search** - Search items by title and description
-- **Automatic Timestamps** - Created/updated tracking
-- **Data Validation** - Check constraints and triggers
-- **Performance Indexes** - Optimized queries
-- **Views** - Common query abstractions
-
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-
 - Node.js 18+ 
-- npm, yarn, or pnpm
-- Supabase account
+- npm or pnpm
 
-### 1. Clone the Repository
+### Installation
 
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd nextgen-product-page
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 👥 Sample Account Details
+
+### Test Users (Ready to Use)
+
+#### User 1: Kathan
+- **Email**: kathan@example.com (admin account) route on website : /admin 
+- **Note**: That the branch side contains a more immersive admin side 
+- **Password**: password123
+- **Location**: Mumbai, India
+- **Items**: 5 clothing items available for swap
+
+#### User 2: Priyansh
+- **Email**: priyansh@example.com
+- **Password**: password123
+- **Location**: Delhi, India
+- **Items**: 3 clothing items available for swap
+
+#### User 3: Prabhakar
+- **Email**: prabhakar@example.com
+- **Password**: password123
+- **Location**: Bangalore, India
+- **Items**: 4 clothing items available for swap
+
+#### User 4: Anjali
+- **Email**: anjali@example.com
+- **Password**: password123
+- **Location**: Chennai, India
+- **Items**: 6 clothing items available for swap
+
+### Sample Items Available
+- Designer handbags
+- Casual t-shirts
+- Denim jackets
+- Floral dresses
+- Hoodies
+- And more...
+
+## 📱 How to Use
+
+### Getting Started
+1. **Sign Up/Login**: Use one of the sample accounts above or create your own
+2. **Browse Items**: Visit the Browse page to see available items
+3. **Add Your Items**: Click "Add Item" to list your clothing for swap
+4. **Send Swap Requests**: Click on items you like to request a swap
+5. **Manage Requests**: Check your Requests page to accept/reject incoming swaps
+
+### Key Pages
+
+#### Home Page (`/`)
+- Landing page with hero section
+- Featured items showcase
+- Quick navigation to main features
+
+#### Browse (`/browse`)
+- View all available items
+- Filter by category, size, condition
+- Search functionality
+- Add new items
+
+#### Dashboard (`/dashboard`)
+- Your profile overview
+- Your listed items
+- Recent activity
+- Quick actions
+
+#### Requests (`/requests`)
+- Incoming swap requests
+- Outgoing swap requests
+- Accept/reject functionality
+- Request status tracking
+
+#### Item Details (`/items/[id]`)
+- Detailed item information
+- User profile
+- Swap request button
+- Item images and description
+
+## 🛠️ Technical Architecture
+
+### Frontend Stack
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **State Management**: React Context (Auth)
+- **Data Persistence**: localStorage
+
+### Project Structure
+```
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   ├── browse/            # Browse items page
+│   ├── dashboard/         # User dashboard
+│   ├── items/             # Item detail pages
+│   ├── requests/          # Swap requests page
+│   └── ...
+├── components/            # Reusable UI components
+│   ├── ui/               # shadcn/ui components
+│   ├── header.tsx        # Navigation header
+│   └── item-card.tsx     # Item display card
+├── contexts/             # React contexts
+├── lib/                  # Utility functions
+│   ├── database.ts       # localStorage database
+│   ├── auth.ts          # Authentication utilities
+│   └── utils.ts         # General utilities
+└── public/              # Static assets
+```
+
+### Data Models
+
+#### User
+```typescript
+{
+  id: string
+  name: string
+  email: string
+  password: string
+  avatar_url: string
+  location: string
+  bio: string
+  points: number
+  created_at: string
+}
+```
+
+#### Item
+```typescript
+{
+  id: string
+  title: string
+  description: string
+  category: string
+  size: string
+  condition: string
+  image_url: string
+  user_id: string
+  points: number
+  created_at: string
+}
+```
+
+#### SwapRequest
+```typescript
+{
+  id: string
+  requester_id: string
+  item_id: string
+  status: 'pending' | 'accepted' | 'rejected'
+  message: string
+  created_at: string
+  updated_at: string
+}
+```
+
+## 🔧 Development
+
+### Available Scripts
 ```bash
-git clone <repository-url>
-cd nextgen-product-page
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
 ```
 
-### 2. Install Dependencies
+### Adding New Features
+1. Create new pages in `app/` directory
+2. Add API routes in `app/api/` for backend functionality
+3. Create reusable components in `components/`
+4. Update database functions in `lib/database.ts` if needed
 
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-```
+### Styling Guidelines
+- Use Tailwind CSS classes for styling
+- Follow shadcn/ui component patterns
+- Maintain consistent spacing and typography
+- Ensure responsive design for all components
 
-### 3. Set Up Supabase
+## 🌍 Environmental Impact
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Get your project URL and anon key from Settings > API
-3. Copy the environment variables:
+ReWear promotes sustainable fashion by:
+- **Reducing Textile Waste**: Extending the life of clothing items
+- **Promoting Circular Economy**: Encouraging item reuse and sharing
+- **Building Community**: Connecting people through sustainable practices
+- **Raising Awareness**: Educating users about sustainable fashion choices
 
-```bash
-cp env.example .env.local
-```
-
-4. Update `.env.local` with your Supabase credentials:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-```
-
-### 4. Set Up Database
-
-1. Install Supabase CLI:
-
-```bash
-npm install -g @supabase/cli
-```
-
-2. Initialize Supabase (optional, for local development):
-
-```bash
-supabase init
-```
-
-3. Run the database schema:
-
-```bash
-# Option 1: Run via Supabase Dashboard SQL Editor
-# Copy and paste the contents of scripts/01-create-tables.sql
-
-# Option 2: Use Supabase CLI (if you have it set up)
-supabase db push
-```
-
-4. Seed the database with sample data:
-
-```bash
-# Copy and paste the contents of scripts/02-seed-data.sql
-# into the Supabase Dashboard SQL Editor
-```
-
-### 5. Generate TypeScript Types
-
-```bash
-npm run db:generate
-```
-
-### 6. Start Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the application.
-
-## Database Setup Details
-
-### Tables Overview
-
-#### users
-- User profiles with points system
-- Role-based access (user, admin, moderator)
-- Location and bio information
-
-#### items
-- Clothing items with detailed metadata
-- Status tracking (pending, approved, rejected, sold)
-- Points value and availability flags
-- Full-text search capabilities
-
-#### swap_requests
-- Swap transactions between users
-- Support for direct swaps, points-based swaps, and mixed swaps
-- Shipping and tracking information
-- Status tracking throughout the swap process
-
-#### notifications
-- Real-time user notifications
-- Multiple notification types
-- Read/unread status tracking
-
-#### messages
-- In-app messaging system
-- Linked to swap requests
-- Read status tracking
-
-### Security Features
-
-- **Row Level Security (RLS)** enabled on all tables
-- **Policy-based access control** for data protection
-- **Input validation** with check constraints
-- **Automatic audit trails** for points transactions
-
-### Performance Optimizations
-
-- **Database indexes** on frequently queried columns
-- **Full-text search indexes** for item discovery
-- **Views** for common query patterns
-- **Efficient joins** with proper foreign key relationships
-
-## API Routes
-
-The application includes several API routes for database operations:
-
-- `/api/items` - Item management (GET, POST)
-- `/api/items/[id]` - Individual item operations (GET, PUT, DELETE)
-- `/api/swap/request` - Create swap requests
-- `/api/swap/[id]/accept` - Accept swap requests
-- `/api/swap/[id]/reject` - Reject swap requests
-- `/api/swap/[id]/shipping` - Update shipping information
-- `/api/user/[id]/listings` - User's listed items
-
-## Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Yes |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | No |
-| `NEXTAUTH_SECRET` | NextAuth secret | No |
-| `NEXTAUTH_URL` | NextAuth URL | No |
-
-## Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy
-
-### Other Platforms
-
-The application can be deployed to any platform that supports Next.js:
-- Netlify
-- Railway
-- DigitalOcean App Platform
-- AWS Amplify
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+## 🆘 Support
 
-For support, please open an issue in the GitHub repository or contact the development team.
+If you encounter any issues or have questions:
+1. Check the browser console for error messages
+2. Ensure you're using a supported browser (Chrome, Firefox, Safari, Edge)
+3. Clear localStorage if data becomes corrupted
+4. Create an issue in the repository
 
-## Roadmap
+## 🎯 Roadmap
 
-- [ ] Real-time messaging with WebSockets
-- [ ] Image upload and management
+### Planned Features
+- [ ] Real-time messaging between users
+- [ ] Image upload functionality
 - [ ] Advanced search filters
-- [ ] Mobile app development
-- [ ] Integration with shipping providers
-- [ ] Analytics dashboard
-- [ ] Social features (following, sharing)
-- [ ] Sustainability impact tracking 
+- [ ] User verification system
+- [ ] Mobile app version
+- [ ] Integration with external databases
+- [ ] Payment system for premium features
+- [ ] Social media sharing
+- [ ] Item recommendations
+- [ ] Community forums
+
+---
+
+**Built with ❤️ for a sustainable future** 

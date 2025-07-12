@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import type { User } from "@/lib/auth"
-import { mockUsers } from "@/lib/database"
+import { getUser } from "@/lib/database"
 
 interface AuthContextType {
   user: User | null
@@ -28,38 +28,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock authentication - in real app, this would call Supabase
-    const foundUser = mockUsers.find((u) => u.email === email)
-    if (foundUser) {
+    // Simple authentication using localStorage data
+    try {
+      // Get users from localStorage
+      const users = JSON.parse(localStorage.getItem('rewear_users') || '[]')
+      const foundUser = users.find((u: any) => u.email === email && u.password === password)
+      
+      if (foundUser) {
+        const userSession = {
+          id: foundUser.id,
+          email: foundUser.email,
+          full_name: foundUser.full_name,
+          points: foundUser.points,
+          role: foundUser.role,
+          avatar_url: foundUser.avatar_url,
+        }
+        setUser(userSession)
+        localStorage.setItem("rewear_user", JSON.stringify(userSession))
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Login error:', error)
+      return false
+    }
+  }
+
+  const signup = async (email: string, password: string, fullName: string): Promise<boolean> => {
+    try {
+      // Get existing users
+      const users = JSON.parse(localStorage.getItem('rewear_users') || '[]')
+      
+      // Check if user already exists
+      if (users.find((u: any) => u.email === email)) {
+        return false
+      }
+
+      const newUser = {
+        id: Date.now().toString(),
+        email,
+        full_name: fullName,
+        password,
+        points: 100,
+        role: "user",
+        avatar_url: "/placeholder-user.jpg",
+        bio: null,
+        location: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      // Add to users array
+      users.push(newUser)
+      localStorage.setItem('rewear_users', JSON.stringify(users))
+
+      // Set as current user
       const userSession = {
-        id: foundUser.id,
-        email: foundUser.email,
-        full_name: foundUser.full_name,
-        points: foundUser.points,
-        role: foundUser.role,
-        avatar_url: foundUser.avatar_url,
+        id: newUser.id,
+        email: newUser.email,
+        full_name: newUser.full_name,
+        points: newUser.points,
+        role: newUser.role,
+        avatar_url: newUser.avatar_url,
       }
       setUser(userSession)
       localStorage.setItem("rewear_user", JSON.stringify(userSession))
       return true
+    } catch (error) {
+      console.error('Signup error:', error)
+      return false
     }
-    return false
-  }
-
-  const signup = async (email: string, password: string, fullName: string): Promise<boolean> => {
-    // Mock signup - in real app, this would call Supabase
-    const newUser = {
-      id: Date.now().toString(),
-      email,
-      full_name: fullName,
-      points: 100,
-      role: "user",
-      avatar_url: "/placeholder.svg?height=40&width=40",
-    }
-    mockUsers.push(newUser)
-    setUser(newUser)
-    localStorage.setItem("rewear_user", JSON.stringify(newUser))
-    return true
   }
 
   const logout = () => {

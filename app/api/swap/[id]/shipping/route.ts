@@ -1,44 +1,45 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { mockSwapRequests, mockNotifications } from "@/lib/database"
+import { NextRequest, NextResponse } from "next/server"
+import { updateSwapRequest, createNotification } from "@/lib/database"
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const body = await request.json()
-    const { shippingMethod, shippingAddress, message } = body
+    const { shipping_method, shipping_address } = body
 
-    // Find and update the swap request
-    const requestIndex = mockSwapRequests.findIndex((req) => req.id === params.id)
-    if (requestIndex === -1) {
-      return NextResponse.json({ error: "Swap request not found" }, { status: 404 })
-    }
-
-    mockSwapRequests[requestIndex] = {
-      ...mockSwapRequests[requestIndex],
+    // Update swap request status to shipped
+    const updatedRequest = await updateSwapRequest(params.id, {
       status: "shipped",
-      shipping_method: shippingMethod,
-      shipping_address: shippingAddress,
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+
+    if (!updatedRequest) {
+      return NextResponse.json(
+        { error: "Swap request not found" },
+        { status: 404 }
+      )
     }
 
     // Create notification for the requester
-    const notification = {
-      id: Date.now().toString(),
-      user_id: mockSwapRequests[requestIndex].requester_id,
-      type: "swap_shipped" as const,
-      title: "Shipping Arranged",
-      message: `Shipping has been arranged via ${shippingMethod}`,
-      read: false,
-      related_id: params.id,
-      created_at: new Date().toISOString(),
-    }
-
-    mockNotifications.push(notification)
+    await createNotification({
+      user_id: updatedRequest.requester_id,
+      title: "Item Shipped",
+      message: "The item you requested has been shipped",
+      type: "system",
+      is_read: false
+    })
 
     return NextResponse.json({
       success: true,
-      message: "Shipping arrangement confirmed",
+      swapRequest: updatedRequest
     })
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error updating shipping status:", error)
+    return NextResponse.json(
+      { error: "Failed to update shipping status" },
+      { status: 500 }
+    )
   }
 }
